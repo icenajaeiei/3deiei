@@ -9,9 +9,8 @@
 <meta property="og:description" content="ทดลองเลือกอาหารแบบ 3D จัดตะกร้า และติดตามการจัดส่งจำลอง">
 <meta name="twitter:card" content="summary_large_image">
 
-<!-- Open-Source WebAR Engine (Three.js WebGL & WebRTC Camera) - 100% Free, Infinite Playtime, Zero-trial -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<!-- Google model-viewer for True Floor-Locked WebAR (iOS Quick Look & Android Scene Viewer) -->
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 
 <style>
@@ -42,17 +41,16 @@ main{flex:1;overflow-y:auto;padding:14px;display:grid;gap:12px;align-content:sta
 #promo{background:linear-gradient(90deg,#00b14f,#7ed957);color:#fff;border-radius:14px;padding:12px 14px;font-size:13px;margin-bottom:2px}
 #cbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;border-radius:14px;padding:14px;display:flex;justify-content:space-between;z-index:4;cursor:pointer;box-shadow:0 6px 18px #0004}
 
-/* 3D & Inline AR Stage (วางบนพื้นที่ใกล้ที่สุดทันที • ไม่มีปุ่มล็อค • บีบนิ้วย่อขยายได้) */
+/* 3D & Google model-viewer Stage (Quick Look & Scene Viewer ล็อคติดพื้น 100%) */
 #view{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:5}
-#stage{flex:1;position:relative;min-height:220px;background:radial-gradient(circle at 50% 40%,#28241f 0%,#151310 100%);overflow:hidden;touch-action:none}
-#ar-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none}
-#gl{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2;cursor:grab;touch-action:none}
-#gl:active{cursor:grabbing}
+#stage{flex:1;position:relative;min-height:320px;background:#151310;overflow:hidden}
+model-viewer{width:100%;height:100%;min-height:320px;--poster-color:transparent;background-color:#151310;display:block}
+#ar-launch-btn{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;border:0;border-radius:999px;padding:12px 24px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,0.5);cursor:pointer;white-space:nowrap;z-index:10}
+#ar-launch-btn:active{transform:translateX(-50%) scale(0.96)}
 #vback{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:10}
 #badge{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--ac);color:#fff;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;z-index:10;box-shadow:0 3px 12px rgba(0,0,0,0.4);display:flex;align-items:center;gap:6px}
-#hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.78);color:#fff;font-size:12px;padding:6px 16px;border-radius:999px;text-align:center;width:auto;max-width:92%;box-shadow:0 2px 10px rgba(0,0,0,0.45);z-index:10;pointer-events:none;white-space:nowrap}
+#hint{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.78);color:#fff;font-size:12px;padding:6px 16px;border-radius:999px;text-align:center;width:auto;max-width:92%;box-shadow:0 2px 10px rgba(0,0,0,0.45);z-index:9;pointer-events:none;white-space:nowrap}
 #pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:9}
-@keyframes stageSpin{to{transform:rotate(360deg)}}
 
 #vp{padding:14px;border-top:1px solid var(--line);padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));max-height:60%;overflow-y:auto;flex-shrink:0}
 #vp h2{margin:0;font-size:19px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -96,22 +94,31 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 <div id="cbar" hidden><span id="cbt"></span><b>ดูตะกร้า ›</b></div>
 <main id="rest" hidden></main>
 
-<!-- 3D & Inline WebAR (วางบนพื้นที่ใกล้ที่สุดทันที • ไม่มีปุ่มล็อค • บีบนิ้วย่อ-ขยายได้อิสระ) -->
+<!-- 3D & Google WebAR (<model-viewer> ล็อคติดพื้น 100% • ปรับขนาดสมจริงตามโลกจริง) -->
 <section id="view" hidden>
  <div id="stage">
-  <!-- Live camera video stream for real world background -->
-  <video id="ar-video" autoplay playsinline muted></video>
-  <!-- Direct WebGL canvas with 100% reliable 3D rendering -->
-  <canvas id="gl"></canvas>
+  <model-viewer id="mv"
+    src=""
+    ios-src=""
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    ar-scale="fixed"
+    camera-controls
+    auto-rotate
+    rotation-per-second="25deg"
+    shadow-intensity="1"
+    shadow-softness="0.8"
+    exposure="1.0"
+    style="width: 100%; height: 100%;">
+    <button slot="ar-button" id="ar-launch-btn">
+      📱 เปิดกล้อง AR (วางบนพื้นจริง 100%)
+    </button>
+  </model-viewer>
 
   <img id="pimg" hidden alt="">
   <button id="vback" class="ib">← เมนู</button>
-  <span id="badge">⚡ Inline WebAR (ฟรี 100%)</span>
-  <div id="hint">วางบนโต๊ะตรงหน้าทันที • บีบนิ้วย่อ-ขยาย • ลากนิ้วหมุนดูรอบจาน</div>
-  <div id="stage-loading" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9;flex-direction:column;align-items:center;gap:10px;color:#fff;background:rgba(0,0,0,0.8);padding:14px 22px;border-radius:18px;backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,0,0.5)">
-   <div style="width:30px;height:30px;border:3px solid rgba(255,255,255,0.3);border-top-color:#00b14f;border-radius:50%;animation:stageSpin 0.8s linear infinite"></div>
-   <span id="stage-loading-text" style="font-size:13px;font-weight:600">กำลังจัดวางอาหาร 3D บนโต๊ะ...</span>
-  </div>
+  <span id="badge">⚡ Quick Look & Scene Viewer</span>
+  <div id="hint">หมุนดูได้ 360° • กดปุ่ม AR เพื่อส่องวางบนโต๊ะจริง</div>
  </div>
 
  <div id="vp">
@@ -169,6 +176,31 @@ const REAL_WORLD_SIZES = {
   'เค้กเชอร์รีดับเบิลเลเยอร์': 0.22       // 22 ซม. (จานเค้กสองชั้น)
 };
 
+// ---- Calibrated Scale Multipliers for Google model-viewer (Quick Look & Scene Viewer)
+// Solves oversized food in iOS AR Quick Look and Android Scene Viewer
+const MODEL_SCALES = {
+  'สแมชเบอร์เกอร์เนื้อชีส': 0.0221,
+  'ดับเบิลเบอร์เกอร์ & เฟรนช์ฟรายส์': 0.03241,
+  'สเต๊กเนื้อย่างจิ้มแจ่ว': 0.14,
+  'พิซซ่าเตาฟืนพรีเมียม': 0.01456,
+  'ริซอตโต้เห็ดทรัฟเฟิล': 0.13,
+  'ซุปหัวหอมสไตล์อิตาเลียน': 0.0974,
+  'ต้มแซ่บกระดูกอ่อนสูตรโบราณ': 0.1071,
+  'ก๋วยเตี๋ยวต้มยำกุ้งแม่น้ำ': 0.03884,
+  'ผัดหมี่โบราณสูตรคุณยาย': 0.13,
+  'ราเมนทงคตสึสไปซี่': 0.0404,
+  'อุด้งร้อนเซ็ตญี่ปุ่น': 0.04351,
+  'ยากิโซบะกระทะร้อน': 0.13,
+  'ซูชิเรือรวมมิตรพรีเมียม': 0.225,
+  'ครัวซองต์เนยสดฝรั่งเศส': 0.09006,
+  'แครมบรูเล่วานิลลาแท้': 0.03531,
+  'โดนัทรวมรสพรีเมียม': 0.002111,
+  'ไอศกรีมช็อกโกแลตซันเดย์': 0.02874,
+  'บลูเบอร์รีคัพเค้กครีมชีส': 0.0334,
+  'เค้กช็อกโกแลตบราวนี่ฟัดจ์': 0.1,
+  'เค้กเชอร์รีดับเบิลเลเยอร์': 0.0003681
+};
+
 // ---- Database for custom user models (.glb) in IndexedDB
 const dbo=()=>new Promise((res,rej)=>{const r=indexedDB.open('food3d',1);r.onupgradeneeded=()=>r.result.createObjectStore('m');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 async function dbGet(k){try{const d=await dbo();return new Promise((res,rej)=>{const q=d.transaction('m').objectStore('m').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}catch(e){return null}}
@@ -206,12 +238,6 @@ const RESTS=[
 
 // ---- state
 let viewing=false,it=null,rs=null,qty=1,cart=[];
-let arStream=null;
-let currentScaleMultiplier=1.0;
-let dishRotationY=0;
-let dishPositionZ=0;
-let currentModelObj=null;
-let rawBounds=null;
 
 const fmt=n=>'฿'+n;
 const clock=m=>{const d=new Date(Date.now()+m*60000);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
@@ -231,239 +257,41 @@ let photos={};try{photos=JSON.parse(localStorage.getItem('photos')||'{}')}catch(
 const ph=x=>photos[x.n]||'';
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',2400)}
 
-// ---- 3D / WebGL Engine (Guaranteed Rendering & Zero-trial Cut-off)
-const cv=$('#gl'),stage=$('#stage');
-const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-renderer.outputEncoding=THREE.sRGBEncoding;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.2;
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+// ---- Google <model-viewer> Controller (True Floor-Locked AR Quick Look & Scene Viewer)
+const mv=$('#mv');
 
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(45,1,0.05,50);
-camera.position.set(0,0.28,0.44);
-camera.lookAt(0,0.05,0);
-
-// Warm restaurant studio lighting
-const hemiLight=new THREE.HemisphereLight(0xfff8ee,0x3e3020,0.95);
-scene.add(hemiLight);
-
-const ambLight=new THREE.AmbientLight(0xffffff,0.75);
-scene.add(ambLight);
-
-const dirLight=new THREE.DirectionalLight(0xfff6ea,1.6);
-dirLight.position.set(1.5,4,2.5);
-dirLight.castShadow=true;
-dirLight.shadow.mapSize.set(1024,1024);
-dirLight.shadow.bias=-0.0005;
-scene.add(dirLight);
-
-const rimLight=new THREE.DirectionalLight(0xffb87a,0.65);
-rimLight.position.set(-2,2.5,-1.5);
-scene.add(rimLight);
-
-// Soft contact shadow disk onto tabletop
-const shadowGeo=new THREE.PlaneGeometry(1,1);
-const shadowCanvas=document.createElement('canvas');
-shadowCanvas.width=shadowCanvas.height=128;
-const sctx=shadowCanvas.getContext('2d');
-const sGrad=sctx.createRadialGradient(64,64,10,64,64,64);
-sGrad.addColorStop(0,'rgba(0,0,0,0.72)');
-sGrad.addColorStop(0.5,'rgba(0,0,0,0.25)');
-sGrad.addColorStop(1,'rgba(0,0,0,0)');
-sctx.fillStyle=sGrad;
-sctx.fillRect(0,0,128,128);
-const shadowTex=new THREE.CanvasTexture(shadowCanvas);
-
-const shadowMat=new THREE.MeshBasicMaterial({
- color:0x000000,
- transparent:true,
- opacity:0.45,
- map:shadowTex,
- depthWrite:false
-});
-const shadowMesh=new THREE.Mesh(shadowGeo,shadowMat);
-shadowMesh.rotation.x=-Math.PI/2;
-shadowMesh.position.y=0.001;
-scene.add(shadowMesh);
-
-// Food Container Group (วางบนพื้น/โต๊ะที่ใกล้ที่สุดตรงหน้าผู้ใช้ทันที)
-const foodGroup=new THREE.Group();
-foodGroup.position.set(0,0,0);
-scene.add(foodGroup);
-
-function createTabletopPlate(targetMeters){
- const g=new THREE.Group();
- const plateRadius=Math.max(0.08,targetMeters*0.55);
- const plateGeo=new THREE.CylinderGeometry(plateRadius,plateRadius*0.82,0.014,32);
- const plateMat=new THREE.MeshStandardMaterial({
-  color:0xfaf7f2,
-  roughness:0.3,
-  metalness:0.05
- });
- const plate=new THREE.Mesh(plateGeo,plateMat);
- plate.position.y=0.007;
- plate.castShadow=true;
- plate.receiveShadow=true;
- g.add(plate);
-
- const domeGeo=new THREE.SphereGeometry(plateRadius*0.75,24,16,0,Math.PI*2,0,Math.PI/2);
- const domeMat=new THREE.MeshStandardMaterial({
-  color:0xd97736,
-  roughness:0.45,
-  metalness:0.1
- });
- const dome=new THREE.Mesh(domeGeo,domeMat);
- dome.position.y=0.014;
- dome.castShadow=true;
- g.add(dome);
- return g;
-}
-
-function resize(){
- const w=stage.clientWidth||window.innerWidth;
- const h=stage.clientHeight||Math.round(window.innerHeight*0.5);
- if(!w||!h)return;
- renderer.setSize(w,h,false);
- camera.aspect=w/h;
- camera.updateProjectionMatrix();
-}
-window.addEventListener('resize',resize);
-
-function applyScale(){
- if(!currentModelObj||!rawBounds||!it)return;
- const targetMeters=REAL_WORLD_SIZES[it.n]||0.25;
- const s=(targetMeters*currentScaleMultiplier)/rawBounds.maxDim;
- currentModelObj.scale.set(s,s,s);
- // จัดกึ่งกลางจาน และวางก้นจานแนบเสมอกับพื้นระนาบโต๊ะ (Y = 0)
- currentModelObj.position.set(-rawBounds.center.x*s, -rawBounds.minY*s, -rawBounds.center.z*s);
-}
-
-// WebRTC Live Rear Camera Stream for Inline AR (iOS & Android, Free 100%)
-async function startCamera(){
- if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+// Dynamic Auto-Scaling: Ensures real-world metric scale in iOS Quick Look & Android Scene Viewer
+// Prevents oversized models (solves giant models in iPhone AR)
+mv.addEventListener('load',()=>{
+ if(!it)return;
  try{
-  if(arStream){arStream.getTracks().forEach(t=>t.stop())}
-  const stream=await navigator.mediaDevices.getUserMedia({
-   video:{
-    facingMode:{ideal:'environment'},
-    width:{ideal:1280},
-    height:{ideal:720}
-   },
-   audio:false
-  });
-  arStream=stream;
-  const vid=$('#ar-video');
-  if(vid){
-   vid.muted=true;
-   vid.setAttribute('playsinline','');
-   vid.setAttribute('muted','');
-   vid.srcObject=stream;
-   await vid.play().catch(()=>{});
+  const dim=mv.getDimensions();
+  const maxDim=Math.max(dim.x,dim.y,dim.z);
+  if(maxDim>0){
+   const targetMeters=REAL_WORLD_SIZES[it.n]||0.25;
+   const calcScale=parseFloat((targetMeters/maxDim).toPrecision(4));
+   const s=`${calcScale} ${calcScale} ${calcScale}`;
+   mv.setAttribute('scale',s);
+   mv.scale=s;
   }
- }catch(err){
-  console.warn('Camera stream notice:',err);
- }
-}
+ }catch(e){}
+});
 
-function stopCamera(){
- if(arStream){
-  arStream.getTracks().forEach(t=>t.stop());
-  arStream=null;
- }
- const vid=$('#ar-video');
- if(vid)vid.srcObject=null;
-}
-
-// Load and display 3D food model on closest tabletop position
 async function showModel(){
  if(!it)return;
- const spinner=$('#stage-loading');
- const spinnerText=$('#stage-loading-text');
- if(spinner){
-  spinnerText.textContent='กำลังจัดวาง '+it.n+' บนโต๊ะ...';
-  spinner.style.display='flex';
- }
-
- while(foodGroup.children.length>0){
-  foodGroup.remove(foodGroup.children[0]);
- }
- currentModelObj=null;
- rawBounds=null;
- currentScaleMultiplier=1.0;
- dishRotationY=0;
- dishPositionZ=0;
- foodGroup.rotation.y=0;
- foodGroup.position.set(0,0,0);
- shadowMesh.position.set(0,0.001,0);
-
- const targetMeters=REAL_WORLD_SIZES[it.n]||0.25;
- shadowMesh.scale.set(targetMeters*2.2,targetMeters*2.2,1);
-
- // Add initial tabletop plate placeholder immediately so screen is NEVER empty!
- const placeholder=createTabletopPlate(targetMeters);
- foodGroup.add(placeholder);
-
  let dbM=null;
  try{dbM=await dbGet(it.n)}catch(e){}
 
- const LoaderClass=window.THREE&&window.THREE.GLTFLoader?window.THREE.GLTFLoader:null;
- if(!LoaderClass){
-  console.error('THREE.GLTFLoader not available!');
-  if(spinner)spinner.style.display='none';
-  toast('กำลังเตรียมระบบ 3D...');
-  return;
- }
-
- const loader=new LoaderClass();
- const onLoaded=gltf=>{
-  if(foodGroup.children.includes(placeholder)){
-   foodGroup.remove(placeholder);
-  }
-  const obj=gltf.scene;
-  currentModelObj=obj;
-  obj.traverse(m=>{
-   if(m.isMesh){
-    m.castShadow=true;
-    m.receiveShadow=true;
-    if(m.material){
-     m.material.side=THREE.DoubleSide;
-     m.material.needsUpdate=true;
-    }
-   }
-  });
-  obj.updateMatrixWorld(true);
-  const box=new THREE.Box3().setFromObject(obj);
-  const size=box.getSize(new THREE.Vector3());
-  const center=box.getCenter(new THREE.Vector3());
-  const maxDim=Math.max(size.x,size.y,size.z,0.001);
-
-  rawBounds={
-   center,
-   size,
-   minY:box.min.y,
-   maxDim
-  };
-  applyScale();
-  foodGroup.add(obj);
-
-  shadowMesh.scale.set(targetMeters*2.2,targetMeters*2.2,1);
-  if(spinner)spinner.style.display='none';
-  resize();
- };
-
- const onError=err=>{
-  console.warn('GLB load error:', err);
-  if(spinner)spinner.style.display='none';
-  toast('แสดงผลจำลอง 3D บนโต๊ะ');
- };
+ const baseScale=MODEL_SCALES[it.n]||0.05;
+ const sStr=`${baseScale} ${baseScale} ${baseScale}`;
+ mv.setAttribute('scale',sStr);
+ mv.scale=sStr;
 
  if(dbM){
-  loader.parse(dbM,'',onLoaded,onError);
+  const blob=new Blob([dbM],{type:'model/gltf-binary'});
+  mv.src=URL.createObjectURL(blob);
  }else{
-  loader.load(it.glb||'/models/burger.glb',onLoaded,undefined,onError);
+  mv.src=it.glb||'/models/burger.glb';
  }
 }
 
@@ -474,37 +302,26 @@ async function openView(x){
  const targetCm=Math.round((REAL_WORLD_SIZES[x.n]||0.25)*100);
  $('#vn').innerHTML=`<span>${x.e} ${x.n}</span><span class="size-badge">ขนาดจริง ~${targetCm} ซม.</span>`;
  $('#vd').textContent=x.d+' • 🛵 ส่งถึงประมาณ '+clock(eta(rs))+' น.';
- $('#hint').textContent='วางบนโต๊ะตรงหน้าทันที • บีบนิ้วย่อ-ขยาย • ลากนิ้วหมุนดูรอบจาน';
+ $('#hint').textContent='หมุนดูได้ 360° • กดปุ่ม AR เพื่อส่องวางบนโต๊ะจริง (ล็อคติดพื้น 100%)';
  upd();
 
- resize();
- requestAnimationFrame(resize);
- startCamera();
  await showModel();
 }
 
 function upd(){$('#qn').textContent=qty;$('#add').textContent='เพิ่มลงตะกร้า • '+fmt(it.p*qty)}
 
-// View Buttons
+// View Controls
 $('#vback').onclick=()=>{
  viewing=false;
  $('#view').hidden=true;
- stopCamera();
 };
 
 $('#rp').onclick=()=>{
- dishRotationY=0;
- dishPositionZ=0;
- currentScaleMultiplier=1.0;
- foodGroup.rotation.y=0;
- foodGroup.position.set(0,0,0);
- shadowMesh.position.set(0,0.001,0);
- camera.position.set(0,0.28,0.44);
- camera.lookAt(0,0.05,0);
- applyScale();
- const targetCm=Math.round((REAL_WORLD_SIZES[it?.n]||0.25)*100);
- $('#hint').textContent='ขนาดเดิม ~'+targetCm+' ซม. • บีบนิ้วย่อ-ขยาย • ลากนิ้วหมุนรอบจาน';
- toast('รีเซ็ตมุมมองและขนาดเดิมแล้ว ✓');
+ if(mv){
+  mv.cameraOrbit='0deg 75deg 105%';
+  mv.resetTurntable();
+ }
+ toast('รีเซ็ตมุมมองแล้ว ✓');
 };
 
 $('#qm').onclick=()=>{qty=Math.max(1,qty-1);upd()};
@@ -516,109 +333,7 @@ $('#add').onclick=()=>{
  toast('เพิ่ม '+it.n+' แล้ว ✓');
  viewing=false;
  $('#view').hidden=true;
- stopCamera();
 };
-
-// Natural Touch Gestures: บีบนิ้วย่อ-ขยาย (Pinch-to-zoom) & ลากนิ้วหมุนจานอาหาร (Swipe-to-rotate)
-let isPinching=false,isDragging=false;
-let baseTouchDist=0,initialScaleOnPinch=1.0;
-let lastTouchX=0,lastTouchY=0;
-
-function getTouchDist(t1,t2){return Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY)}
-
-cv.addEventListener('touchstart',e=>{
- if(e.touches.length===2){
-  isPinching=true;isDragging=false;
-  baseTouchDist=getTouchDist(e.touches[0],e.touches[1]);
-  initialScaleOnPinch=currentScaleMultiplier;
- }else if(e.touches.length===1){
-  isDragging=true;isPinching=false;
-  lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;
- }
-},{passive:true});
-
-cv.addEventListener('touchmove',e=>{
- if(isPinching&&e.touches.length===2){
-  const curDist=getTouchDist(e.touches[0],e.touches[1]);
-  if(baseTouchDist>0){
-   const ratio=curDist/baseTouchDist;
-   currentScaleMultiplier=Math.max(0.35,Math.min(2.8,initialScaleOnPinch*ratio));
-   applyScale();
-   const targetCm=Math.round((REAL_WORLD_SIZES[it?.n]||0.25)*currentScaleMultiplier*100);
-   $('#hint').textContent='ขนาดปรับ: ~'+targetCm+' ซม. (บีบนิ้วปรับขนาดต่อได้)';
-  }
- }else if(isDragging&&e.touches.length===1){
-  const dx=e.touches[0].clientX-lastTouchX;
-  const dy=e.touches[0].clientY-lastTouchY;
-  lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;
-
-  // ปัดซ้าย-ขวาเพื่อหมุนดูรอบจานอาหาร 360 องศา
-  dishRotationY+=dx*0.012;
-  foodGroup.rotation.y=dishRotationY;
-
-  // ปัดขึ้น-ลงเพื่อเลื่อนจานอาหารใกล้-ไกลบนโต๊ะ
-  dishPositionZ=Math.max(-0.45,Math.min(0.35,dishPositionZ+dy*0.0028));
-  foodGroup.position.z=dishPositionZ;
-  shadowMesh.position.z=dishPositionZ;
- }
-},{passive:true});
-
-cv.addEventListener('touchend',e=>{
- if(e.touches.length===0){isPinching=false;isDragging=false}
- else if(e.touches.length===1){
-  isPinching=false;isDragging=true;
-  lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;
- }
-});
-
-// Desktop Mouse Controls
-let isMouseDown=false,lastMouseX=0,lastMouseY=0;
-cv.addEventListener('mousedown',e=>{
- isMouseDown=true;lastMouseX=e.clientX;lastMouseY=e.clientY;
-});
-window.addEventListener('mousemove',e=>{
- if(!isMouseDown||!viewing)return;
- const dx=e.clientX-lastMouseX;
- const dy=e.clientY-lastMouseY;
- lastMouseX=e.clientX;lastMouseY=e.clientY;
- dishRotationY+=dx*0.012;
- foodGroup.rotation.y=dishRotationY;
- dishPositionZ=Math.max(-0.45,Math.min(0.35,dishPositionZ+dy*0.0028));
- foodGroup.position.z=dishPositionZ;
- shadowMesh.position.z=dishPositionZ;
-});
-window.addEventListener('mouseup',()=>{isMouseDown=false});
-cv.addEventListener('wheel',e=>{
- e.preventDefault();
- const delta=e.deltaY>0?-0.08:0.08;
- currentScaleMultiplier=Math.max(0.35,Math.min(2.8,currentScaleMultiplier+delta));
- applyScale();
- const targetCm=Math.round((REAL_WORLD_SIZES[it?.n]||0.25)*currentScaleMultiplier*100);
- $('#hint').textContent='ขนาดปรับ: ~'+targetCm+' ซม. (บีบนิ้วปรับขนาดต่อได้)';
-},{passive:false});
-
-// Device Orientation (ไจโรสโคปมือถือ เอียงมุมกล้องตามธรรมชาติ)
-window.addEventListener('deviceorientation',e=>{
- if(!viewing||e.beta==null||e.gamma==null)return;
- const pitchRad=Math.max(-0.2,Math.min(0.2,(e.beta-50)*0.004));
- const rollRad=Math.max(-0.16,Math.min(0.16,e.gamma*0.004));
- camera.position.x=rollRad*0.5;
- camera.position.y=0.28+pitchRad*0.35;
- camera.lookAt(0,0.05,dishPositionZ);
-},true);
-
-// Animation rendering loop
-function animate(){
- requestAnimationFrame(animate);
- if(!viewing)return;
- const w=stage.clientWidth;
- const h=stage.clientHeight;
- if(w&&h&&(renderer.domElement.width!==Math.floor(w*Math.min(window.devicePixelRatio||1,2))||renderer.domElement.height!==Math.floor(h*Math.min(window.devicePixelRatio||1,2)))){
-  resize();
- }
- renderer.render(scene,camera);
-}
-requestAnimationFrame(animate);
 
 // Custom Model .glb Upload & Reset
 $('#gb').onclick=()=>$('#gf').click();
