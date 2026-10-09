@@ -45,12 +45,9 @@ main{flex:1;overflow-y:auto;padding:14px;display:grid;gap:12px;align-content:sta
 #view{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:5}
 #stage{flex:1;position:relative;min-height:320px;background:#151310;overflow:hidden}
 model-viewer{width:100%;height:100%;min-height:320px;--poster-color:transparent;background-color:#151310;display:block}
-#ar-launch-btn{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;border:0;border-radius:999px;padding:12px 24px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,0.5);cursor:pointer;white-space:nowrap;z-index:10}
+#ar-launch-btn{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;border:0;border-radius:999px;padding:12px 24px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,0.5);cursor:pointer;white-space:nowrap;z-index:10}
 #ar-launch-btn:active{transform:translateX(-50%) scale(0.96)}
 #vback{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:10}
-#badge{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--ac);color:#fff;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;z-index:10;box-shadow:0 3px 12px rgba(0,0,0,0.4);display:flex;align-items:center;gap:6px}
-#hint{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.78);color:#fff;font-size:12px;padding:6px 16px;border-radius:999px;text-align:center;width:auto;max-width:92%;box-shadow:0 2px 10px rgba(0,0,0,0.45);z-index:9;pointer-events:none;white-space:nowrap}
-#pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:9}
 
 #vp{padding:14px;border-top:1px solid var(--line);padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));max-height:60%;overflow-y:auto;flex-shrink:0}
 #vp h2{margin:0;font-size:19px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -102,7 +99,6 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
     ios-src=""
     ar
     ar-modes="webxr scene-viewer quick-look"
-    ar-scale="fixed"
     camera-controls
     auto-rotate
     rotation-per-second="25deg"
@@ -111,28 +107,16 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
     exposure="1.0"
     style="width: 100%; height: 100%;">
     <button slot="ar-button" id="ar-launch-btn">
-      📱 เปิดกล้อง AR (วางบนพื้นจริง 100%)
+      📱 ดูตัวอย่างอาหาร
     </button>
   </model-viewer>
 
-  <img id="pimg" hidden alt="">
   <button id="vback" class="ib">← เมนู</button>
-  <span id="badge">⚡ Quick Look & Scene Viewer</span>
-  <div id="hint">หมุนดูได้ 360° • กดปุ่ม AR เพื่อส่องวางบนโต๊ะจริง</div>
  </div>
 
  <div id="vp">
   <h2 id="vn"></h2>
   <p id="vd"></p>
-  <div class="row">
-    <button class="ib" id="rp">🔄 รีเซ็ตมุมมอง</button>
-    <button class="ib" id="ph">📷 ภาพจริง</button>
-    <button class="ib" id="up">📤 อัปโหลดรูป</button>
-    <button class="ib" id="gb">🧊 โมเดลจริง .glb</button>
-    <button class="ib" id="gd">↩ โมเดลเดิม</button>
-    <input id="gf" type="file" accept=".glb" hidden>
-    <input id="pf" type="file" accept="image/*" hidden>
-  </div>
   <div class="row">
     <span class="sg"><button id="qm">−</button><button id="qn" style="pointer-events:none">1</button><button id="qp">+</button></span>
     <button id="add"></button>
@@ -175,36 +159,6 @@ const REAL_WORLD_SIZES = {
   'เค้กช็อกโกแลตบราวนี่ฟัดจ์': 0.20,      // 20 ซม. (จานเค้ก)
   'เค้กเชอร์รีดับเบิลเลเยอร์': 0.22       // 22 ซม. (จานเค้กสองชั้น)
 };
-
-// ---- Calibrated Scale Multipliers for Google model-viewer (Quick Look & Scene Viewer)
-// Solves oversized food in iOS AR Quick Look and Android Scene Viewer
-const MODEL_SCALES = {
-  'สแมชเบอร์เกอร์เนื้อชีส': 0.0221,
-  'ดับเบิลเบอร์เกอร์ & เฟรนช์ฟรายส์': 0.03241,
-  'สเต๊กเนื้อย่างจิ้มแจ่ว': 0.14,
-  'พิซซ่าเตาฟืนพรีเมียม': 0.01456,
-  'ริซอตโต้เห็ดทรัฟเฟิล': 0.13,
-  'ซุปหัวหอมสไตล์อิตาเลียน': 0.0974,
-  'ต้มแซ่บกระดูกอ่อนสูตรโบราณ': 0.1071,
-  'ก๋วยเตี๋ยวต้มยำกุ้งแม่น้ำ': 0.03884,
-  'ผัดหมี่โบราณสูตรคุณยาย': 0.13,
-  'ราเมนทงคตสึสไปซี่': 0.0404,
-  'อุด้งร้อนเซ็ตญี่ปุ่น': 0.04351,
-  'ยากิโซบะกระทะร้อน': 0.13,
-  'ซูชิเรือรวมมิตรพรีเมียม': 0.225,
-  'ครัวซองต์เนยสดฝรั่งเศส': 0.09006,
-  'แครมบรูเล่วานิลลาแท้': 0.03531,
-  'โดนัทรวมรสพรีเมียม': 0.002111,
-  'ไอศกรีมช็อกโกแลตซันเดย์': 0.02874,
-  'บลูเบอร์รีคัพเค้กครีมชีส': 0.0334,
-  'เค้กช็อกโกแลตบราวนี่ฟัดจ์': 0.1,
-  'เค้กเชอร์รีดับเบิลเลเยอร์': 0.0003681
-};
-
-// ---- Database for custom user models (.glb) in IndexedDB
-const dbo=()=>new Promise((res,rej)=>{const r=indexedDB.open('food3d',1);r.onupgradeneeded=()=>r.result.createObjectStore('m');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
-async function dbGet(k){try{const d=await dbo();return new Promise((res,rej)=>{const q=d.transaction('m').objectStore('m').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}catch(e){return null}}
-async function dbSet(k,v){try{const d=await dbo();return new Promise((res,rej)=>{const t=d.transaction('m','readwrite'),s=t.objectStore('m');v?s.put(v,k):s.delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}}
 
 // ---- data: [ชื่อ, ราคา, อีโมจิ, หมวด, คำอธิบาย, สี, โมเดลจริง GLB]
 const RESTS=[
@@ -253,56 +207,23 @@ function destFor(r,a){const n=destNode(a);return n[0]===r.pos[0]&&n[1]===r.pos[1
 const kmOf=r=>Math.max(.5,routeLen(route(r.pos,destFor(r)))/150);
 const eta=r=>Math.round(12+kmOf(r)*6),fee=r=>Math.round(15+kmOf(r)*7),SVC=5;
 let addr={};try{addr=JSON.parse(localStorage.getItem('addr')||'{}')}catch(e){}
-let photos={};try{photos=JSON.parse(localStorage.getItem('photos')||'{}')}catch(e){}
-const ph=x=>photos[x.n]||'';
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',2400)}
 
 // ---- Google <model-viewer> Controller (True Floor-Locked AR Quick Look & Scene Viewer)
 const mv=$('#mv');
 
-// Dynamic Auto-Scaling: Ensures real-world metric scale in iOS Quick Look & Android Scene Viewer
-// Prevents oversized models (solves giant models in iPhone AR)
-mv.addEventListener('load',()=>{
- if(!it)return;
- try{
-  const dim=mv.getDimensions();
-  const maxDim=Math.max(dim.x,dim.y,dim.z);
-  if(maxDim>0){
-   const targetMeters=REAL_WORLD_SIZES[it.n]||0.25;
-   const calcScale=parseFloat((targetMeters/maxDim).toPrecision(4));
-   const s=`${calcScale} ${calcScale} ${calcScale}`;
-   mv.setAttribute('scale',s);
-   mv.scale=s;
-  }
- }catch(e){}
-});
-
 async function showModel(){
  if(!it)return;
- let dbM=null;
- try{dbM=await dbGet(it.n)}catch(e){}
-
- const baseScale=MODEL_SCALES[it.n]||0.05;
- const sStr=`${baseScale} ${baseScale} ${baseScale}`;
- mv.setAttribute('scale',sStr);
- mv.scale=sStr;
-
- if(dbM){
-  const blob=new Blob([dbM],{type:'model/gltf-binary'});
-  mv.src=URL.createObjectURL(blob);
- }else{
-  mv.src=it.glb||'/models/burger.glb';
- }
+ mv.src=it.glb||'/models/burger.glb';
 }
 
 async function openView(x){
- $('#pimg').hidden=true;$('#ph').textContent='📷 ภาพจริง';it=x;qty=1;viewing=true;
+ it=x;qty=1;viewing=true;
  $('#view').hidden=false;
 
  const targetCm=Math.round((REAL_WORLD_SIZES[x.n]||0.25)*100);
  $('#vn').innerHTML=`<span>${x.e} ${x.n}</span><span class="size-badge">ขนาดจริง ~${targetCm} ซม.</span>`;
  $('#vd').textContent=x.d+' • 🛵 ส่งถึงประมาณ '+clock(eta(rs))+' น.';
- $('#hint').textContent='หมุนดูได้ 360° • กดปุ่ม AR เพื่อส่องวางบนโต๊ะจริง (ล็อคติดพื้น 100%)';
  upd();
 
  await showModel();
@@ -316,14 +237,6 @@ $('#vback').onclick=()=>{
  $('#view').hidden=true;
 };
 
-$('#rp').onclick=()=>{
- if(mv){
-  mv.cameraOrbit='0deg 75deg 105%';
-  mv.resetTurntable();
- }
- toast('รีเซ็ตมุมมองแล้ว ✓');
-};
-
 $('#qm').onclick=()=>{qty=Math.max(1,qty-1);upd()};
 $('#qp').onclick=()=>{qty++;upd()};
 $('#add').onclick=()=>{
@@ -335,33 +248,6 @@ $('#add').onclick=()=>{
  $('#view').hidden=true;
 };
 
-// Custom Model .glb Upload & Reset
-$('#gb').onclick=()=>$('#gf').click();
-$('#gf').onchange=async e=>{
- const f=e.target.files[0];e.target.value='';if(!f)return;
- const buf=await f.arrayBuffer();
- if(new TextDecoder().decode(buf.slice(0,4))!=='glTF'){toast('ไฟล์ต้องเป็นนามสกุล .glb');return}
- try{await dbSet(it.n,buf)}catch(err){toast('บันทึกไม่ได้ (พื้นที่เก็บเต็ม)')}
- await showModel();
- toast('ใช้โมเดลจริง .glb แล้ว ✓');
-};
-$('#gd').onclick=async()=>{
- await dbSet(it.n,null);
- await showModel();
- toast('กลับไปใช้โมเดลเดิม ✓');
-};
-
-// Real photo toggle
-async function setPhoto(f){
- const im=await createImageBitmap(f),m=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');
- c.width=Math.round(im.width*m);c.height=Math.round(im.height*m);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
- photos[it.n]=c.toDataURL('image/jpeg',.75);let ok=true;try{localStorage.setItem('photos',JSON.stringify(photos))}catch(e){ok=false}
- const p=$('#pimg');p.src=photos[it.n];p.hidden=false;$('#ph').textContent='🧊 กลับเป็น 3D';toast(ok?'บันทึกรูปแล้ว ✓':'ใช้ได้ชั่วคราว (พื้นที่เก็บเต็ม)');
-}
-$('#up').onclick=()=>$('#pf').click();
-$('#pf').onchange=e=>{const f=e.target.files[0];if(f)setPhoto(f);e.target.value=''};
-$('#ph').onclick=()=>{if(!ph(it))return $('#pf').click();const p=$('#pimg');p.hidden=!p.hidden;p.src=ph(it);$('#ph').textContent=p.hidden?'📷 ภาพจริง':'🧊 กลับเป็น 3D'};
-
 // ---- Restaurant Screens & Search
 function go(s){$('#home').hidden=s!=='home';$('#rest').hidden=s!=='rest';$('#back').hidden=s==='home';
  $('#ttl').textContent=s==='home'?'🍽 ร้านอาหารใกล้คุณ':rs.e+' '+rs.n;$('#'+(s==='home'?'home':'rest')).scrollTop=0}
@@ -371,7 +257,7 @@ function renderHome(){$('#list').innerHTML='';RESTS.filter(match).forEach(r=>{co
  b.onclick=()=>{rs=r;const m=$('#rest');m.innerHTML='<div class="bn"><div class="e">'+r.e+'</div><h2>'+r.n+'</h2><p>'+r.d+'</p><p style="margin-top:6px">🛵 ส่งถึงประมาณ '+clock(eta(r))+' น. (~'+eta(r)+' นาที) • ค่าส่ง '+fmt(fee(r))+' • ⭐ '+r.r+'</p></div>';
    r.m.forEach(x=>{const i=document.createElement('button');i.className='mi';
     const cm=Math.round((REAL_WORLD_SIZES[x.n]||0.25)*100);
-    i.innerHTML=(ph(x)?'<img class="th" src="'+ph(x)+'">':'<span class="e">'+x.e+'</span>')+'<span class="t"><b>'+x.n+'</b><small>'+x.d+'</small><small>'+fmt(x.p)+' • ขนาด ~'+cm+' ซม.</small></span><span class="tag">ดู 3D/AR</span>';
+    i.innerHTML='<span class="e">'+x.e+'</span><span class="t"><b>'+x.n+'</b><small>'+x.d+'</small><small>'+fmt(x.p)+' • ขนาด ~'+cm+' ซม.</small></span><span class="tag">ดู</span>';
     i.onclick=()=>openView(x);
     m.appendChild(i)});go('rest')};
   $('#list').appendChild(b);});if(!RESTS.some(match))$('#list').innerHTML='<p style="text-align:center;color:var(--mut)">ไม่พบร้านที่ค้นหา</p>'}
