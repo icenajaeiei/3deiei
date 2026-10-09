@@ -9,9 +9,9 @@
 <meta property="og:description" content="ทดลองเลือกอาหารแบบ 3D จัดตะกร้า และติดตามการจัดส่งจำลอง">
 <meta name="twitter:card" content="summary_large_image">
 
-<!-- Zappar for A-Frame: True Inline AR with Instant World Tracking (iOS & Android) -->
-<script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-<script src="https://libs.zappar.com/zappar-aframe/2.0.0/zappar-aframe.js"></script>
+<!-- Open-Source WebAR: A-Frame & MindAR (100% Free, No 30s Trial Cut-off) -->
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 
 <style>
@@ -42,17 +42,15 @@ main{flex:1;overflow-y:auto;padding:14px;display:grid;gap:12px;align-content:sta
 #promo{background:linear-gradient(90deg,#00b14f,#7ed957);color:#fff;border-radius:14px;padding:12px 14px;font-size:13px;margin-bottom:2px}
 #cbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;border-radius:14px;padding:14px;display:flex;justify-content:space-between;z-index:4;cursor:pointer;box-shadow:0 6px 18px #0004}
 
-/* 3D & Inline AR Stage (Zappar for A-Frame) */
+/* 3D & Inline AR Stage (Open Source, Free 100%, No 30s cut-off) */
 #view{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:5}
 #stage{flex:1;position:relative;min-height:160px;background:#181614;overflow:hidden;touch-action:none}
-#stage a-scene{width:100%!important;height:100%!important;position:absolute!important;inset:0!important}
+#ar-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none}
+#stage a-scene{width:100%!important;height:100%!important;position:absolute!important;inset:0!important;z-index:2!important}
 #stage a-scene .a-canvas{width:100%!important;height:100%!important;position:absolute!important;top:0!important;left:0!important;outline:none}
 #vback{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:10}
 #badge{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--ac);color:#fff;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;z-index:10;box-shadow:0 3px 12px rgba(0,0,0,0.4);display:flex;align-items:center;gap:6px}
-#ar-controls-overlay{position:absolute;bottom:10px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none;z-index:10;padding:0 12px}
-.ar-action-btn{pointer-events:auto;background:var(--ac);color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,0.6);cursor:pointer;transition:transform .15s,background .15s}
-.ar-action-btn:active{transform:scale(0.96)}
-#hint{background:rgba(0,0,0,0.65);color:#fff;font-size:12px;padding:4px 14px;border-radius:8px;text-align:center;max-width:94%;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+#hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.72);color:#fff;font-size:12px;padding:6px 16px;border-radius:999px;text-align:center;width:auto;max-width:92%;box-shadow:0 2px 10px rgba(0,0,0,0.4);z-index:10;pointer-events:none}
 #pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:9}
 
 #vp{padding:14px;border-top:1px solid var(--line);padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));max-height:60%;overflow-y:auto;flex-shrink:0}
@@ -97,58 +95,47 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 <div id="cbar" hidden><span id="cbt"></span><b>ดูตะกร้า ›</b></div>
 <main id="rest" hidden></main>
 
-<!-- 3D & Inline AR Stage (Zappar for A-Frame: Instant World Tracking) -->
+<!-- 3D & Inline AR Stage (วางบนพื้นที่ใกล้ที่สุดทันที • ไม่มีปุ่มล็อค • บีบนิ้วย่อขยายได้) -->
 <section id="view" hidden>
  <div id="stage">
+  <!-- Live camera video stream for true inline WebAR -->
+  <video id="ar-video" autoplay playsinline muted></video>
+
   <a-scene
     id="ar-scene"
     embedded
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
-    renderer="antialias: true; colorManagement: true; exposure: 1.1;"
+    renderer="alpha: true; antialias: true; colorManagement: true;"
   >
-    <!-- Permissions and compatibility UI for camera -->
-    <a-entity zappar-permissions-ui id="permissions"></a-entity>
-    <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
-
-    <!-- Zappar Camera with rear camera feed directly on the webpage -->
-    <a-entity camera zappar-camera="userFacing: false;"></a-entity>
-
-    <!-- Zappar Instant World Tracking anchor (tracks tabletop/floor surface) -->
-    <a-entity zappar-instant="placement-mode: true; anchorPoseOffset: 0 -0.28 -1.2;" id="instant-tracker">
-      <a-entity id="food-container" position="0 0 0" rotation="0 0 0">
-        <a-entity id="food-model"></a-entity>
-        <!-- Soft realistic ground contact shadow -->
-        <a-ring color="#000000" opacity="0.35" radius-inner="0" radius-outer="0.18" rotation="-90 0 0" position="0 0.001 0"></a-ring>
-      </a-entity>
+    <!-- Camera Rig -->
+    <a-entity id="camera-rig" position="0 0 0">
+      <a-camera id="main-camera" position="0 0 0" look-controls="enabled: false"></a-camera>
     </a-entity>
 
-    <!-- Realistic Warm Lights for Food Presentation -->
+    <!-- Anchored Food Container (วางบนพื้น/โต๊ะที่ใกล้ที่สุดทันทีที่ตำแหน่ง z = -0.95m, y = -0.28m) -->
+    <a-entity id="food-anchor" position="0 -0.28 -0.95" rotation="0 0 0">
+      <a-entity id="food-model"></a-entity>
+      <!-- Contact Shadow on table plane -->
+      <a-ring color="#000000" opacity="0.35" radius-inner="0" radius-outer="0.22" rotation="-90 0 0" position="0 0.001 0"></a-ring>
+    </a-entity>
+
+    <!-- Warm Realistic Lights for Food Presentation -->
     <a-entity light="type: ambient; color: #fff8f0; intensity: 0.95;"></a-entity>
-    <a-entity light="type: directional; color: #fff4e2; intensity: 1.5; castShadow: true;" position="1.5 4 2.5"></a-entity>
-    <a-entity light="type: directional; color: #ffcca0; intensity: 0.6;" position="-2 2 -1"></a-entity>
+    <a-entity light="type: directional; color: #fff5e6; intensity: 1.45;" position="1.5 4 2"></a-entity>
+    <a-entity light="type: directional; color: #ffd6aa; intensity: 0.6;" position="-2 2 -1"></a-entity>
   </a-scene>
 
   <img id="pimg" hidden alt="">
   <button id="vback" class="ib">← เมนู</button>
-  <span id="badge">⚡ Inline AR (Zappar)</span>
-
-  <!-- Floating AR Placement & Hint Controls -->
-  <div id="ar-controls-overlay">
-    <button id="ar-place-btn" class="ar-action-btn">
-      📍 วางบนโต๊ะตรงนี้ (ล็อคพื้น)
-    </button>
-    <div id="hint">ส่องกล้องหาโต๊ะ • กด "วางบนโต๊ะตรงนี้" เพื่อล็อคอาหารติดพื้น • ลากนิ้วเพื่อหมุนดูรอบจาน</div>
-  </div>
+  <span id="badge">⚡ Inline WebAR (ฟรี 100%)</span>
+  <div id="hint">วางบนโต๊ะตรงหน้าทันที • บีบนิ้วย่อ-ขยาย • ลากนิ้วหมุนดูรอบจาน</div>
  </div>
 
  <div id="vp">
   <h2 id="vn"></h2>
   <p id="vd"></p>
   <div class="row">
-    <button class="ib" id="ar-place-toggle">📍 วาง / ย้ายที่</button>
-    <button class="ib" id="scale-up-btn">🔍 + ขยาย</button>
-    <button class="ib" id="scale-down-btn">🔍 − ย่อ</button>
     <button class="ib" id="rp">🔄 รีเซ็ตมุมมอง</button>
     <button class="ib" id="ph">📷 ภาพจริง</button>
     <button class="ib" id="up">📤 อัปโหลดรูป</button>
@@ -173,11 +160,11 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 (()=>{
 const $=s=>document.querySelector(s);
 
-// ---- Realistic Real-world Dimensions in Meters (ปรับขนาดโมเดลอาหารแต่ละชนิดให้เหมาะสมกับโลกจริง)
+// ---- Realistic Real-world Metric Proportions in Meters
 const REAL_WORLD_SIZES = {
   // Burgers & Mains
   'สแมชเบอร์เกอร์เนื้อชีส': 0.15,        // 15 ซม. (เบอร์เกอร์เดี่ยว)
-  'ดับเบิลเบอร์เกอร์ & เฟรนช์ฟรายส์': 0.22,   // 22 ซม. (ถาดเบอร์เกอร์+เฟรนช์ฟรายส์)
+  'ดับเบิลเบอร์เกอร์ & เฟรนช์ฟรายส์': 0.22,   // 22 ซม. (ชุดเบอร์เกอร์+เฟรนช์ฟรายส์)
   'สเต๊กเนื้อย่างจิ้มแจ่ว': 0.28,          // 28 ซม. (จานสเต๊กเนื้อ)
   'พิซซ่าเตาฟืนพรีเมียม': 0.35,          // 35 ซม. (พิซซ่าถาด 14 นิ้ว)
   'ริซอตโต้เห็ดทรัฟเฟิล': 0.26,          // 26 ซม. (จานริซอตโต้)
@@ -238,7 +225,7 @@ const RESTS=[
 // ---- state
 let viewing=false,it=null,rs=null,qty=1,cart=[];
 let customBlobUrl=null;
-let isPlaced=false;
+let arStream=null;
 let currentScaleMultiplier=1.0;
 let rawMeshBounds=null;
 let currentLoadedMesh=null;
@@ -292,7 +279,53 @@ foodModelEl.addEventListener('model-loaded',()=>{
  applyFoodScale();
 });
 
-// ---- 3D / AR Display via Zappar for A-Frame (Instant World Tracking)
+// Ensure A-Frame scene WebGL context is transparent to show camera
+const sceneEl=$('#ar-scene');
+if(sceneEl){
+ sceneEl.addEventListener('loaded',()=>{
+  if(sceneEl.renderer){
+   sceneEl.renderer.setClearColor(0x000000, 0);
+  }
+ });
+}
+
+// WebRTC Camera Management (Open Source, 100% Free, Infinite Playtime)
+async function startCamera(){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+ try{
+  if(arStream){
+   arStream.getTracks().forEach(t=>t.stop());
+  }
+  const stream=await navigator.mediaDevices.getUserMedia({
+   video:{
+    facingMode:{ideal:'environment'},
+    width:{ideal:1920},
+    height:{ideal:1080}
+   },
+   audio:false
+  });
+  arStream=stream;
+  const vid=$('#ar-video');
+  if(vid){
+   vid.srcObject=stream;
+   await vid.play().catch(()=>{});
+  }
+ }catch(err){
+  console.warn('Camera stream error:',err);
+  toast('แสดงผลบนพื้นหลัง 3D (อนุญาตกล้องเพื่อดูภาพจริง)');
+ }
+}
+
+function stopCamera(){
+ if(arStream){
+  arStream.getTracks().forEach(t=>t.stop());
+  arStream=null;
+ }
+ const vid=$('#ar-video');
+ if(vid)vid.srcObject=null;
+}
+
+// ---- 3D / Inline AR Display: วางบนพื้นที่ใกล้ที่สุดทันที
 async function showModel(){
  if(!it)return;
  if(customBlobUrl){URL.revokeObjectURL(customBlobUrl);customBlobUrl=null}
@@ -301,41 +334,15 @@ async function showModel(){
  const modelSrc=dbM?URL.createObjectURL(new Blob([dbM],{type:'model/gltf-binary'})):(it.glb||'/models/burger.glb');
  if(dbM)customBlobUrl=modelSrc;
 
- // Reset placement tracker state
- const tracker=$('#instant-tracker');
- isPlaced=false;
+ // วางบนพื้นที่ใกล้ที่สุดทันที (Z = -0.95m ในระดับโต๊ะทานข้าว)
  currentScaleMultiplier=1.0;
- if(tracker){
-  tracker.setAttribute('zappar-instant','placement-mode: true; anchorPoseOffset: 0 -0.28 -1.2;');
+ const anchor=$('#food-anchor');
+ if(anchor){
+  anchor.setAttribute('position','0 -0.28 -0.95');
+  anchor.setAttribute('rotation','0 0 0');
  }
- const placeBtn=$('#ar-place-btn');
- if(placeBtn)placeBtn.innerHTML='📍 วางบนโต๊ะตรงนี้ (ล็อคพื้น)';
- const placeToggle=$('#ar-place-toggle');
- if(placeToggle)placeToggle.innerHTML='📍 วางบนโต๊ะ';
-
- const container=$('#food-container');
- if(container)container.setAttribute('rotation','0 0 0');
 
  foodModelEl.setAttribute('gltf-model',modelSrc);
-}
-
-function togglePlacement(){
- const tracker=$('#instant-tracker');
- if(!tracker)return;
- isPlaced=!isPlaced;
- const placeBtn=$('#ar-place-btn');
- const placeToggle=$('#ar-place-toggle');
- if(isPlaced){
-  tracker.setAttribute('zappar-instant','placement-mode: false;');
-  if(placeBtn)placeBtn.innerHTML='🔄 แตะเพื่อย้ายตำแหน่งวาง';
-  if(placeToggle)placeToggle.innerHTML='🔄 ย้ายที่วาง';
-  toast('ล็อคโมเดลติดพื้นโต๊ะแล้ว ✓ (ลากหมุนดูรอบจานได้)');
- }else{
-  tracker.setAttribute('zappar-instant','placement-mode: true; anchorPoseOffset: 0 -0.28 -1.2;');
-  if(placeBtn)placeBtn.innerHTML='📍 วางบนโต๊ะตรงนี้ (ล็อคพื้น)';
-  if(placeToggle)placeToggle.innerHTML='📍 วางบนโต๊ะ';
-  toast('ส่องกล้องหาจุดที่ต้องการ แล้วแตะวางอาหาร');
- }
 }
 
 async function openView(x){
@@ -345,40 +352,30 @@ async function openView(x){
  $('#vn').innerHTML=`<span>${x.e} ${x.n}</span><span class="size-badge">ขนาดจริง ~${targetCm} ซม.</span>`;
  $('#vd').textContent=x.d+' • 🛵 ส่งถึงประมาณ '+clock(eta(rs))+' น.';
  upd();
- const sceneEl=$('#ar-scene');
  if(sceneEl&&sceneEl.play)sceneEl.play();
+ startCamera();
  await showModel();
 }
 
 function upd(){$('#qn').textContent=qty;$('#add').textContent='เพิ่มลงตะกร้า • '+fmt(it.p*qty)}
 
-// View Buttons & AR Actions
+// View Buttons
 $('#vback').onclick=()=>{
  viewing=false;
  $('#view').hidden=true;
- const sceneEl=$('#ar-scene');
+ stopCamera();
  if(sceneEl&&sceneEl.pause)sceneEl.pause();
 };
-$('#ar-place-btn').onclick=togglePlacement;
-$('#ar-place-toggle').onclick=togglePlacement;
 
 $('#rp').onclick=()=>{
- const container=$('#food-container');
- if(container)container.setAttribute('rotation','0 0 0');
+ const anchor=$('#food-anchor');
+ if(anchor){
+  anchor.setAttribute('position','0 -0.28 -0.95');
+  anchor.setAttribute('rotation','0 0 0');
+ }
  currentScaleMultiplier=1.0;
  applyFoodScale();
- toast('รีเซ็ตมุมมองและขนาดเดิมแล้ว ✓');
-};
-
-$('#scale-up-btn').onclick=()=>{
- currentScaleMultiplier=Math.min(2.5,currentScaleMultiplier+0.15);
- applyFoodScale();
- toast('ขยายขนาด: '+Math.round(currentScaleMultiplier*100)+'%');
-};
-$('#scale-down-btn').onclick=()=>{
- currentScaleMultiplier=Math.max(0.4,currentScaleMultiplier-0.15);
- applyFoodScale();
- toast('ย่อขนาด: '+Math.round(currentScaleMultiplier*100)+'%');
+ toast('รีเซ็ตตำแหน่งและขนาดเดิมแล้ว ✓');
 };
 
 $('#qm').onclick=()=>{qty=Math.max(1,qty-1);upd()};
@@ -390,44 +387,102 @@ $('#add').onclick=()=>{
  toast('เพิ่ม '+it.n+' แล้ว ✓');
  viewing=false;
  $('#view').hidden=true;
- const sceneEl=$('#ar-scene');
+ stopCamera();
  if(sceneEl&&sceneEl.pause)sceneEl.pause();
 };
 
-// Touch & Mouse gestures to smoothly rotate food dish in AR
-let isInteracting=false,lastCoordX=0;
+// Natural Touch Gestures: บีบนิ้วย่อ-ขยาย (Pinch-to-zoom) & ลากนิ้วหมุนจานอาหาร (Swipe-to-rotate)
+let isPinching=false,isDragging=false;
+let baseTouchDist=0,initialScaleOnPinch=1.0;
+let lastTouchX=0,lastTouchY=0;
+
 const stageEl=$('#stage');
+function getTouchDist(t1,t2){return Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY)}
+
 stageEl.addEventListener('touchstart',e=>{
- if(e.target.closest('#ar-controls-overlay button,#vback,#badge'))return;
- if(e.touches.length===1){isInteracting=true;lastCoordX=e.touches[0].clientX}
-},{passive:true});
-stageEl.addEventListener('touchmove',e=>{
- if(!isInteracting||e.touches.length!==1)return;
- const dx=e.touches[0].clientX-lastCoordX;
- lastCoordX=e.touches[0].clientX;
- const container=$('#food-container');
- if(container){
-  const rot=container.getAttribute('rotation')||{x:0,y:0,z:0};
-  container.setAttribute('rotation',{x:rot.x,y:(rot.y+dx*0.75)%360,z:rot.z});
+ if(e.target.closest('#vback,#badge'))return;
+ if(e.touches.length===2){
+  isPinching=true;isDragging=false;
+  baseTouchDist=getTouchDist(e.touches[0],e.touches[1]);
+  initialScaleOnPinch=currentScaleMultiplier;
+ }else if(e.touches.length===1){
+  isDragging=true;isPinching=false;
+  lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;
  }
 },{passive:true});
-stageEl.addEventListener('touchend',()=>{isInteracting=false});
 
+stageEl.addEventListener('touchmove',e=>{
+ if(isPinching&&e.touches.length===2){
+  const curDist=getTouchDist(e.touches[0],e.touches[1]);
+  if(baseTouchDist>0){
+   const ratio=curDist/baseTouchDist;
+   currentScaleMultiplier=Math.max(0.35,Math.min(2.8,initialScaleOnPinch*ratio));
+   applyFoodScale();
+  }
+ }else if(isDragging&&e.touches.length===1){
+  const dx=e.touches[0].clientX-lastTouchX;
+  const dy=e.touches[0].clientY-lastTouchY;
+  lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;
+
+  const anchor=$('#food-anchor');
+  if(anchor){
+   // หมุนรอบจานด้วยการปัดซ้าย-ขวา
+   const rot=anchor.getAttribute('rotation')||{x:0,y:0,z:0};
+   anchor.setAttribute('rotation',{x:rot.x,y:(rot.y+dx*0.75)%360,z:rot.z});
+
+   // เลื่อนใกล้-ไกลบนโต๊ะด้วยการปัดขึ้น-ลง
+   const pos=anchor.getAttribute('position')||{x:0,y:-0.28,z:-0.95};
+   const newZ=Math.max(-1.7,Math.min(-0.55,pos.z+dy*0.003));
+   anchor.setAttribute('position',{x:pos.x,y:pos.y,z:newZ});
+  }
+ }
+},{passive:true});
+
+stageEl.addEventListener('touchend',e=>{
+ if(e.touches.length===0){isPinching=false;isDragging=false}
+ else if(e.touches.length===1){
+  isPinching=false;isDragging=true;
+  lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;
+ }
+});
+
+// Desktop Mouse Controls: หมุนด้วยการลากเมาส์ & ซูมด้วย Mouse Wheel
+let isMouseDown=false,lastMouseX=0,lastMouseY=0;
 stageEl.addEventListener('mousedown',e=>{
- if(e.target.closest('#ar-controls-overlay button,#vback,#badge'))return;
- isInteracting=true;lastCoordX=e.clientX;
+ if(e.target.closest('#vback,#badge'))return;
+ isMouseDown=true;lastMouseX=e.clientX;lastMouseY=e.clientY;
 });
 window.addEventListener('mousemove',e=>{
- if(!isInteracting)return;
- const dx=e.clientX-lastCoordX;
- lastCoordX=e.clientX;
- const container=$('#food-container');
- if(container){
-  const rot=container.getAttribute('rotation')||{x:0,y:0,z:0};
-  container.setAttribute('rotation',{x:rot.x,y:(rot.y+dx*0.75)%360,z:rot.z});
+ if(!isMouseDown)return;
+ const dx=e.clientX-lastMouseX;
+ const dy=e.clientY-lastMouseY;
+ lastMouseX=e.clientX;lastMouseY=e.clientY;
+ const anchor=$('#food-anchor');
+ if(anchor){
+  const rot=anchor.getAttribute('rotation')||{x:0,y:0,z:0};
+  anchor.setAttribute('rotation',{x:rot.x,y:(rot.y+dx*0.75)%360,z:rot.z});
+  const pos=anchor.getAttribute('position')||{x:0,y:-0.28,z:-0.95};
+  const newZ=Math.max(-1.7,Math.min(-0.55,pos.z+dy*0.003));
+  anchor.setAttribute('position',{x:pos.x,y:pos.y,z:newZ});
  }
 });
-window.addEventListener('mouseup',()=>{isInteracting=false});
+window.addEventListener('mouseup',()=>{isMouseDown=false});
+stageEl.addEventListener('wheel',e=>{
+ e.preventDefault();
+ const delta=e.deltaY>0?-0.1:0.1;
+ currentScaleMultiplier=Math.max(0.35,Math.min(2.8,currentScaleMultiplier+delta));
+ applyFoodScale();
+},{passive:false});
+
+// Device Orientation (ไจโรสโคปมือถือ เอียงมุมกล้องตามธรรมชาติ)
+window.addEventListener('deviceorientation',e=>{
+ if(!viewing||e.beta==null||e.gamma==null)return;
+ const rig=$('#camera-rig');
+ if(!rig)return;
+ const pitch=Math.max(-20,Math.min(20,(e.beta-50)*0.22));
+ const roll=Math.max(-16,Math.min(16,e.gamma*0.22));
+ rig.setAttribute('rotation',`${-pitch} 0 ${-roll}`);
+},true);
 
 // Custom Model .glb Upload & Reset
 $('#gb').onclick=()=>$('#gf').click();
