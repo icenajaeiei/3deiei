@@ -8,7 +8,12 @@
 <meta property="og:title" content="สั่งอาหาร 3D • เดลิเวอรี่">
 <meta property="og:description" content="ทดลองเลือกอาหารแบบ 3D จัดตะกร้า และติดตามการจัดส่งจำลอง">
 <meta name="twitter:card" content="summary_large_image">
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+
+<!-- Zappar for A-Frame: True Inline AR with Instant World Tracking (iOS & Android) -->
+<script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+<script src="https://libs.zappar.com/zappar-aframe/2.0.0/zappar-aframe.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+
 <style>
 :root{--bg:#f4f5f4;--fg:#1d1a16;--card:#fff;--mut:#6b6358;--ac:#00b14f;--line:#e4dbcd;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15130f;--fg:#f4ede2;--card:#221e18;--mut:#a89d8c;--line:#352f26}}
@@ -37,30 +42,36 @@ main{flex:1;overflow-y:auto;padding:14px;display:grid;gap:12px;align-content:sta
 #promo{background:linear-gradient(90deg,#00b14f,#7ed957);color:#fff;border-radius:14px;padding:12px 14px;font-size:13px;margin-bottom:2px}
 #cbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;border-radius:14px;padding:14px;display:flex;justify-content:space-between;z-index:4;cursor:pointer;box-shadow:0 6px 18px #0004}
 
-/* 3D & AR View Section */
+/* 3D & Inline AR Stage (Zappar for A-Frame) */
 #view{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:5}
-#stage{flex:1;position:relative;min-height:160px;background:#181614;overflow:hidden}
-model-viewer#mv{width:100%;height:100%;display:block;outline:none;background:radial-gradient(circle at center, #2a2520 0%, #151310 100%)}
-#ar-launch-btn{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;border:0;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,0.5);cursor:pointer;z-index:3;white-space:nowrap}
-#ar-launch-btn:active{transform:translateX(-50%) scale(0.97)}
-#vback{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:3}
-#badge{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--ac);color:#fff;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;z-index:3;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 3px 12px rgba(0,0,0,0.3)}
-#hint{position:absolute;bottom:8px;text-align:center;font-size:12px;color:#f0e8dc;pointer-events:none;z-index:2;text-shadow:0 1px 3px #000;background:rgba(0,0,0,0.55);padding:4px 14px;border-radius:8px;left:50%;transform:translateX(-50%);width:auto;max-width:94%}
-#pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:2}
+#stage{flex:1;position:relative;min-height:160px;background:#181614;overflow:hidden;touch-action:none}
+#stage a-scene{width:100%!important;height:100%!important;position:absolute!important;inset:0!important}
+#stage a-scene .a-canvas{width:100%!important;height:100%!important;position:absolute!important;top:0!important;left:0!important;outline:none}
+#vback{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:10}
+#badge{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--ac);color:#fff;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;z-index:10;box-shadow:0 3px 12px rgba(0,0,0,0.4);display:flex;align-items:center;gap:6px}
+#ar-controls-overlay{position:absolute;bottom:10px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none;z-index:10;padding:0 12px}
+.ar-action-btn{pointer-events:auto;background:var(--ac);color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,0.6);cursor:pointer;transition:transform .15s,background .15s}
+.ar-action-btn:active{transform:scale(0.96)}
+#hint{background:rgba(0,0,0,0.65);color:#fff;font-size:12px;padding:4px 14px;border-radius:8px;text-align:center;max-width:94%;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+#pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:9}
+
 #vp{padding:14px;border-top:1px solid var(--line);padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));max-height:60%;overflow-y:auto;flex-shrink:0}
-#vp h2{margin:0;font-size:19px}#vp p{margin:4px 0 10px;color:var(--mut);font-size:14px}
+#vp h2{margin:0;font-size:19px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.size-badge{background:#e3f2fd;color:#0d47a1;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600}
+:root[data-theme="dark"] .size-badge{background:#152840;color:#90caf9}
+#vp p{margin:4px 0 10px;color:var(--mut);font-size:14px}
 .row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
 .sg button{border:1px solid var(--line);background:var(--card);padding:6px 14px;border-radius:9px}
 .sg button.on{background:var(--fg);color:var(--bg)}
 #add{flex:1;background:var(--ac);color:#fff;border:0;border-radius:12px;padding:13px;font-weight:600}
-#sheet{position:fixed;inset:0;background:#0008;z-index:9;display:flex;align-items:flex-end}
+#sheet{position:fixed;inset:0;background:#0008;z-index:15;display:flex;align-items:flex-end}
 #sheet>div{background:var(--bg);width:100%;border-radius:20px 20px 0 0;padding:18px;max-height:70%;overflow:auto}
-#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000d;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;display:none;z-index:20;max-width:calc(100% - 24px);overflow-wrap:anywhere}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000d;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;display:none;z-index:25;max-width:calc(100% - 24px);overflow-wrap:anywhere}
 .th{width:72px;height:72px;border-radius:14px;object-fit:cover;flex:none}
 .in{width:100%;box-sizing:border-box;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;margin:6px 0 12px}
 #addr{display:flex;gap:8px;align-items:center;padding:9px 14px;background:var(--card);border-bottom:1px solid var(--line);font-size:13px;cursor:pointer}
 #addr #at{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-#track{position:fixed;inset:0;background:var(--bg);z-index:7;display:flex;flex-direction:column}
+#track{position:fixed;inset:0;background:var(--bg);z-index:12;display:flex;flex-direction:column}
 #tt{display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px}
 #tt b{font-size:17px;display:block}#tt small{color:var(--mut)}
 #mw{position:relative;flex:0 0 auto;overflow:hidden}#map{width:100%;display:block;max-height:44vh;background:#ebe7dc;touch-action:none;cursor:grab}
@@ -69,7 +80,7 @@ model-viewer#mv{width:100%;height:100%;display:block;outline:none;background:rad
 .pu{transform-box:fill-box;transform-origin:center;animation:pu 1.4s infinite}@keyframes pu{from{transform:scale(.7);opacity:.6}to{transform:scale(2.2);opacity:0}}
 #tc{flex:1;overflow:auto;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .stp{display:flex;margin-bottom:6px}.stp span{font-size:11px;color:var(--mut);text-align:center;flex:1}.stp span.on{color:var(--ac);font-weight:700}
-.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-bottom:14px}.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .6s}
+.bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:14px}.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .6s}
 .rd{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
 *,*::before,*::after{box-sizing:border-box}
 body{min-width:0;height:100dvh}
@@ -86,33 +97,58 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 <div id="cbar" hidden><span id="cbt"></span><b>ดูตะกร้า ›</b></div>
 <main id="rest" hidden></main>
 
-<!-- 3D & Google Model-Viewer AR Section (โมเดลล็อคติดพื้น 100%) -->
+<!-- 3D & Inline AR Stage (Zappar for A-Frame: Instant World Tracking) -->
 <section id="view" hidden>
  <div id="stage">
-  <model-viewer
-    id="mv"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
-    ar-placement="floor"
-    camera-controls
-    touch-action="pan-y"
-    shadow-intensity="1"
-    shadow-softness="0.8"
-    exposure="1.05"
-    alt="อาหาร 3D / AR"
+  <a-scene
+    id="ar-scene"
+    embedded
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    renderer="antialias: true; colorManagement: true; exposure: 1.1;"
   >
-    <button slot="ar-button" id="ar-launch-btn">
-      📱 ส่อง AR บนโต๊ะจริง (ล็อคพื้น 100%)
-    </button>
-  </model-viewer>
+    <!-- Permissions and compatibility UI for camera -->
+    <a-entity zappar-permissions-ui id="permissions"></a-entity>
+    <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
+
+    <!-- Zappar Camera with rear camera feed directly on the webpage -->
+    <a-entity camera zappar-camera="userFacing: false;"></a-entity>
+
+    <!-- Zappar Instant World Tracking anchor (tracks tabletop/floor surface) -->
+    <a-entity zappar-instant="placement-mode: true; anchorPoseOffset: 0 -0.28 -1.2;" id="instant-tracker">
+      <a-entity id="food-container" position="0 0 0" rotation="0 0 0">
+        <a-entity id="food-model"></a-entity>
+        <!-- Soft realistic ground contact shadow -->
+        <a-ring color="#000000" opacity="0.35" radius-inner="0" radius-outer="0.18" rotation="-90 0 0" position="0 0.001 0"></a-ring>
+      </a-entity>
+    </a-entity>
+
+    <!-- Realistic Warm Lights for Food Presentation -->
+    <a-entity light="type: ambient; color: #fff8f0; intensity: 0.95;"></a-entity>
+    <a-entity light="type: directional; color: #fff4e2; intensity: 1.5; castShadow: true;" position="1.5 4 2.5"></a-entity>
+    <a-entity light="type: directional; color: #ffcca0; intensity: 0.6;" position="-2 2 -1"></a-entity>
+  </a-scene>
+
   <img id="pimg" hidden alt="">
   <button id="vback" class="ib">← เมนู</button>
-  <span id="badge">📱 AR ล็อคพื้น 100%</span>
-  <div id="hint">หมุน-ซูมโมเดล 3D ได้อิสระ • กดปุ่ม AR เพื่อส่องวางบนโต๊ะจริง (ล็อคติดพื้น 100%)</div>
+  <span id="badge">⚡ Inline AR (Zappar)</span>
+
+  <!-- Floating AR Placement & Hint Controls -->
+  <div id="ar-controls-overlay">
+    <button id="ar-place-btn" class="ar-action-btn">
+      📍 วางบนโต๊ะตรงนี้ (ล็อคพื้น)
+    </button>
+    <div id="hint">ส่องกล้องหาโต๊ะ • กด "วางบนโต๊ะตรงนี้" เพื่อล็อคอาหารติดพื้น • ลากนิ้วเพื่อหมุนดูรอบจาน</div>
+  </div>
  </div>
- <div id="vp"><h2 id="vn"></h2><p id="vd"></p>
+
+ <div id="vp">
+  <h2 id="vn"></h2>
+  <p id="vd"></p>
   <div class="row">
-    <button class="ib" id="ar-mode-btn">📱 ส่อง AR บนโต๊ะ</button>
+    <button class="ib" id="ar-place-toggle">📍 วาง / ย้ายที่</button>
+    <button class="ib" id="scale-up-btn">🔍 + ขยาย</button>
+    <button class="ib" id="scale-down-btn">🔍 − ย่อ</button>
     <button class="ib" id="rp">🔄 รีเซ็ตมุมมอง</button>
     <button class="ib" id="ph">📷 ภาพจริง</button>
     <button class="ib" id="up">📤 อัปโหลดรูป</button>
@@ -121,7 +157,10 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
     <input id="gf" type="file" accept=".glb" hidden>
     <input id="pf" type="file" accept="image/*" hidden>
   </div>
-  <div class="row"><span class="sg"><button id="qm">−</button><button id="qn" style="pointer-events:none">1</button><button id="qp">+</button></span><button id="add"></button></div>
+  <div class="row">
+    <span class="sg"><button id="qm">−</button><button id="qn" style="pointer-events:none">1</button><button id="qp">+</button></span>
+    <button id="add"></button>
+  </div>
  </div>
 </section>
 
@@ -130,11 +169,36 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 <div id="toast"></div>
 <div id="root" style="display:none"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 (()=>{
 const $=s=>document.querySelector(s);
-const mv=$('#mv');
+
+// ---- Realistic Real-world Dimensions in Meters (ปรับขนาดโมเดลอาหารแต่ละชนิดให้เหมาะสมกับโลกจริง)
+const REAL_WORLD_SIZES = {
+  // Burgers & Mains
+  'สแมชเบอร์เกอร์เนื้อชีส': 0.15,        // 15 ซม. (เบอร์เกอร์เดี่ยว)
+  'ดับเบิลเบอร์เกอร์ & เฟรนช์ฟรายส์': 0.22,   // 22 ซม. (ถาดเบอร์เกอร์+เฟรนช์ฟรายส์)
+  'สเต๊กเนื้อย่างจิ้มแจ่ว': 0.28,          // 28 ซม. (จานสเต๊กเนื้อ)
+  'พิซซ่าเตาฟืนพรีเมียม': 0.35,          // 35 ซม. (พิซซ่าถาด 14 นิ้ว)
+  'ริซอตโต้เห็ดทรัฟเฟิล': 0.26,          // 26 ซม. (จานริซอตโต้)
+  // Noodles & Soups
+  'ซุปหัวหอมสไตล์อิตาเลียน': 0.20,        // 20 ซม. (ถ้วยซุป)
+  'ต้มแซ่บกระดูกอ่อนสูตรโบราณ': 0.22,      // 22 ซม. (ชามต้มแซ่บ)
+  'ก๋วยเตี๋ยวต้มยำกุ้งแม่น้ำ': 0.25,       // 25 ซม. (ชามก๋วยเตี๋ยว)
+  'ผัดหมี่โบราณสูตรคุณยาย': 0.26,         // 26 ซม. (จานผัดหมี่)
+  'ราเมนทงคตสึสไปซี่': 0.26,           // 26 ซม. (ชามราเมน)
+  'อุด้งร้อนเซ็ตญี่ปุ่น': 0.28,           // 28 ซม. (ถาดเซ็ตอุด้ง)
+  'ยากิโซบะกระทะร้อน': 0.26,          // 26 ซม. (กระทะร้อน)
+  'ซูชิเรือรวมมิตรพรีเมียม': 0.45,        // 45 ซม. (เรือซูชิรวมมิตร)
+  // Desserts & Bakery
+  'ครัวซองต์เนยสดฝรั่งเศส': 0.18,         // 18 ซม. (ครัวซองต์)
+  'แครมบรูเล่วานิลลาแท้': 0.14,         // 14 ซม. (ถ้วยคาราเมล)
+  'โดนัทรวมรสพรีเมียม': 0.20,           // 20 ซม. (จานโดนัท)
+  'ไอศกรีมช็อกโกแลตซันเดย์': 0.16,       // 16 ซม. (ถ้วยไอศกรีม)
+  'บลูเบอร์รีคัพเค้กครีมชีส': 0.12,       // 12 ซม. (คัพเค้ก)
+  'เค้กช็อกโกแลตบราวนี่ฟัดจ์': 0.20,      // 20 ซม. (จานเค้ก)
+  'เค้กเชอร์รีดับเบิลเลเยอร์': 0.22       // 22 ซม. (จานเค้กสองชั้น)
+};
 
 // ---- Database for custom user models (.glb) in IndexedDB
 const dbo=()=>new Promise((res,rej)=>{const r=indexedDB.open('food3d',1);r.onupgradeneeded=()=>r.result.createObjectStore('m');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
@@ -174,6 +238,11 @@ const RESTS=[
 // ---- state
 let viewing=false,it=null,rs=null,qty=1,cart=[];
 let customBlobUrl=null;
+let isPlaced=false;
+let currentScaleMultiplier=1.0;
+let rawMeshBounds=null;
+let currentLoadedMesh=null;
+
 const fmt=n=>'฿'+n;
 const clock=m=>{const d=new Date(Date.now()+m*60000);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 const MV=[20,60,120,180,240,300,340],MH=[25,55,110,150,175,215,238];
@@ -192,55 +261,173 @@ let photos={};try{photos=JSON.parse(localStorage.getItem('photos')||'{}')}catch(
 const ph=x=>photos[x.n]||'';
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',2400)}
 
-// ---- 3D / AR Display via Google <model-viewer>
+// ---- Apply Real-world scale to 3D Mesh
+function applyFoodScale(){
+ if(!currentLoadedMesh||!rawMeshBounds||!it)return;
+ const targetMeters=REAL_WORLD_SIZES[it.n]||0.25;
+ const s=(targetMeters*currentScaleMultiplier)/rawMeshBounds.maxDim;
+ currentLoadedMesh.scale.set(s,s,s);
+ // Center horizontally and align bottom plate exactly flush on floor/table (Y = 0)
+ currentLoadedMesh.position.set(-rawMeshBounds.center.x*s, -rawMeshBounds.minY*s, -rawMeshBounds.center.z*s);
+}
+
+// Listen to model-loaded event from A-Frame GLTF loader
+const foodModelEl=$('#food-model');
+foodModelEl.addEventListener('model-loaded',()=>{
+ const mesh=foodModelEl.getObject3D('mesh');
+ if(!mesh)return;
+ currentLoadedMesh=mesh;
+ mesh.updateMatrixWorld(true);
+ const THREE=window.THREE||(window.AFRAME&&window.AFRAME.THREE);
+ if(!THREE)return;
+ const bbox=new THREE.Box3().setFromObject(mesh);
+ const size=bbox.getSize(new THREE.Vector3());
+ const center=bbox.getCenter(new THREE.Vector3());
+ rawMeshBounds={
+  center,
+  size,
+  minY:bbox.min.y,
+  maxDim:Math.max(size.x,size.y,size.z,0.001)
+ };
+ applyFoodScale();
+});
+
+// ---- 3D / AR Display via Zappar for A-Frame (Instant World Tracking)
 async function showModel(){
- if(!it||!mv)return;
+ if(!it)return;
  if(customBlobUrl){URL.revokeObjectURL(customBlobUrl);customBlobUrl=null}
  let dbM=null;
  try{dbM=await dbGet(it.n)}catch(e){}
- if(dbM){
-  customBlobUrl=URL.createObjectURL(new Blob([dbM],{type:'model/gltf-binary'}));
-  mv.src=customBlobUrl;
- }else{
-  mv.src=it.glb||'/models/burger.glb';
+ const modelSrc=dbM?URL.createObjectURL(new Blob([dbM],{type:'model/gltf-binary'})):(it.glb||'/models/burger.glb');
+ if(dbM)customBlobUrl=modelSrc;
+
+ // Reset placement tracker state
+ const tracker=$('#instant-tracker');
+ isPlaced=false;
+ currentScaleMultiplier=1.0;
+ if(tracker){
+  tracker.setAttribute('zappar-instant','placement-mode: true; anchorPoseOffset: 0 -0.28 -1.2;');
  }
- mv.alt=it.n+' (3D / AR)';
- mv.cameraOrbit='0deg 75deg 105%';
- mv.cameraTarget='auto auto auto';
- mv.fieldOfView='auto';
- if(typeof mv.jumpCameraToGoal==='function')mv.jumpCameraToGoal();
+ const placeBtn=$('#ar-place-btn');
+ if(placeBtn)placeBtn.innerHTML='📍 วางบนโต๊ะตรงนี้ (ล็อคพื้น)';
+ const placeToggle=$('#ar-place-toggle');
+ if(placeToggle)placeToggle.innerHTML='📍 วางบนโต๊ะ';
+
+ const container=$('#food-container');
+ if(container)container.setAttribute('rotation','0 0 0');
+
+ foodModelEl.setAttribute('gltf-model',modelSrc);
+}
+
+function togglePlacement(){
+ const tracker=$('#instant-tracker');
+ if(!tracker)return;
+ isPlaced=!isPlaced;
+ const placeBtn=$('#ar-place-btn');
+ const placeToggle=$('#ar-place-toggle');
+ if(isPlaced){
+  tracker.setAttribute('zappar-instant','placement-mode: false;');
+  if(placeBtn)placeBtn.innerHTML='🔄 แตะเพื่อย้ายตำแหน่งวาง';
+  if(placeToggle)placeToggle.innerHTML='🔄 ย้ายที่วาง';
+  toast('ล็อคโมเดลติดพื้นโต๊ะแล้ว ✓ (ลากหมุนดูรอบจานได้)');
+ }else{
+  tracker.setAttribute('zappar-instant','placement-mode: true; anchorPoseOffset: 0 -0.28 -1.2;');
+  if(placeBtn)placeBtn.innerHTML='📍 วางบนโต๊ะตรงนี้ (ล็อคพื้น)';
+  if(placeToggle)placeToggle.innerHTML='📍 วางบนโต๊ะ';
+  toast('ส่องกล้องหาจุดที่ต้องการ แล้วแตะวางอาหาร');
+ }
 }
 
 async function openView(x){
  $('#pimg').hidden=true;$('#ph').textContent='📷 ภาพจริง';it=x;qty=1;viewing=true;
- $('#view').hidden=false;$('#vn').textContent=x.e+' '+x.n;$('#vd').textContent=x.d+' • 🛵 ส่งถึงประมาณ '+clock(eta(rs))+' น.';
+ $('#view').hidden=false;
+ const targetCm=Math.round((REAL_WORLD_SIZES[x.n]||0.25)*100);
+ $('#vn').innerHTML=`<span>${x.e} ${x.n}</span><span class="size-badge">ขนาดจริง ~${targetCm} ซม.</span>`;
+ $('#vd').textContent=x.d+' • 🛵 ส่งถึงประมาณ '+clock(eta(rs))+' น.';
  upd();
+ const sceneEl=$('#ar-scene');
+ if(sceneEl&&sceneEl.play)sceneEl.play();
  await showModel();
 }
 
 function upd(){$('#qn').textContent=qty;$('#add').textContent='เพิ่มลงตะกร้า • '+fmt(it.p*qty)}
 
-// View Buttons
-$('#vback').onclick=()=>{viewing=false;$('#view').hidden=true};
+// View Buttons & AR Actions
+$('#vback').onclick=()=>{
+ viewing=false;
+ $('#view').hidden=true;
+ const sceneEl=$('#ar-scene');
+ if(sceneEl&&sceneEl.pause)sceneEl.pause();
+};
+$('#ar-place-btn').onclick=togglePlacement;
+$('#ar-place-toggle').onclick=togglePlacement;
+
 $('#rp').onclick=()=>{
- if(mv){
-  mv.cameraOrbit='0deg 75deg 105%';
-  mv.cameraTarget='auto auto auto';
-  mv.fieldOfView='auto';
-  if(typeof mv.jumpCameraToGoal==='function')mv.jumpCameraToGoal();
-  toast('รีเซ็ตมุมมองอาหารแล้ว ✓');
- }
+ const container=$('#food-container');
+ if(container)container.setAttribute('rotation','0 0 0');
+ currentScaleMultiplier=1.0;
+ applyFoodScale();
+ toast('รีเซ็ตมุมมองและขนาดเดิมแล้ว ✓');
 };
-$('#ar-mode-btn').onclick=()=>{
- if(mv&&typeof mv.activateAR==='function'){
-  mv.activateAR();
- }else{
-  toast('ส่อง AR ได้บนมือถือระบบ Android หรือ iOS');
- }
+
+$('#scale-up-btn').onclick=()=>{
+ currentScaleMultiplier=Math.min(2.5,currentScaleMultiplier+0.15);
+ applyFoodScale();
+ toast('ขยายขนาด: '+Math.round(currentScaleMultiplier*100)+'%');
 };
-$('#badge').onclick=()=>$('#ar-mode-btn').click();
-$('#qm').onclick=()=>{qty=Math.max(1,qty-1);upd()};$('#qp').onclick=()=>{qty++;upd()};
-$('#add').onclick=()=>{if(cart.length&&cart[0].r!==rs.n)cart=[];cart.push({n:it.n,s:'ปกติ',q:qty,u:it.p,r:rs.n,rr:rs});$('#cn').textContent=cart.reduce((a,c)=>a+c.q,0);toast('เพิ่ม '+it.n+' แล้ว ✓');viewing=false;$('#view').hidden=true};
+$('#scale-down-btn').onclick=()=>{
+ currentScaleMultiplier=Math.max(0.4,currentScaleMultiplier-0.15);
+ applyFoodScale();
+ toast('ย่อขนาด: '+Math.round(currentScaleMultiplier*100)+'%');
+};
+
+$('#qm').onclick=()=>{qty=Math.max(1,qty-1);upd()};
+$('#qp').onclick=()=>{qty++;upd()};
+$('#add').onclick=()=>{
+ if(cart.length&&cart[0].r!==rs.n)cart=[];
+ cart.push({n:it.n,s:'ปกติ',q:qty,u:it.p,r:rs.n,rr:rs});
+ $('#cn').textContent=cart.reduce((a,c)=>a+c.q,0);
+ toast('เพิ่ม '+it.n+' แล้ว ✓');
+ viewing=false;
+ $('#view').hidden=true;
+ const sceneEl=$('#ar-scene');
+ if(sceneEl&&sceneEl.pause)sceneEl.pause();
+};
+
+// Touch & Mouse gestures to smoothly rotate food dish in AR
+let isInteracting=false,lastCoordX=0;
+const stageEl=$('#stage');
+stageEl.addEventListener('touchstart',e=>{
+ if(e.target.closest('#ar-controls-overlay button,#vback,#badge'))return;
+ if(e.touches.length===1){isInteracting=true;lastCoordX=e.touches[0].clientX}
+},{passive:true});
+stageEl.addEventListener('touchmove',e=>{
+ if(!isInteracting||e.touches.length!==1)return;
+ const dx=e.touches[0].clientX-lastCoordX;
+ lastCoordX=e.touches[0].clientX;
+ const container=$('#food-container');
+ if(container){
+  const rot=container.getAttribute('rotation')||{x:0,y:0,z:0};
+  container.setAttribute('rotation',{x:rot.x,y:(rot.y+dx*0.75)%360,z:rot.z});
+ }
+},{passive:true});
+stageEl.addEventListener('touchend',()=>{isInteracting=false});
+
+stageEl.addEventListener('mousedown',e=>{
+ if(e.target.closest('#ar-controls-overlay button,#vback,#badge'))return;
+ isInteracting=true;lastCoordX=e.clientX;
+});
+window.addEventListener('mousemove',e=>{
+ if(!isInteracting)return;
+ const dx=e.clientX-lastCoordX;
+ lastCoordX=e.clientX;
+ const container=$('#food-container');
+ if(container){
+  const rot=container.getAttribute('rotation')||{x:0,y:0,z:0};
+  container.setAttribute('rotation',{x:rot.x,y:(rot.y+dx*0.75)%360,z:rot.z});
+ }
+});
+window.addEventListener('mouseup',()=>{isInteracting=false});
 
 // Custom Model .glb Upload & Reset
 $('#gb').onclick=()=>$('#gf').click();
@@ -277,7 +464,8 @@ function renderHome(){$('#list').innerHTML='';RESTS.filter(match).forEach(r=>{co
  b.innerHTML='<span class="e">'+r.e+'</span><span><b>'+r.n+'</b><small>'+r.c+' • ⭐ '+r.r+' • '+kmOf(r).toFixed(1)+' กม.</small><small>🛵 '+eta(r)+' นาที • ถึง ~'+clock(eta(r))+' น. • ค่าส่ง '+fmt(fee(r))+'</small></span>';
  b.onclick=()=>{rs=r;const m=$('#rest');m.innerHTML='<div class="bn"><div class="e">'+r.e+'</div><h2>'+r.n+'</h2><p>'+r.d+'</p><p style="margin-top:6px">🛵 ส่งถึงประมาณ '+clock(eta(r))+' น. (~'+eta(r)+' นาที) • ค่าส่ง '+fmt(fee(r))+' • ⭐ '+r.r+'</p></div>';
    r.m.forEach(x=>{const i=document.createElement('button');i.className='mi';
-    i.innerHTML=(ph(x)?'<img class="th" src="'+ph(x)+'">':'<span class="e">'+x.e+'</span>')+'<span class="t"><b>'+x.n+'</b><small>'+x.d+'</small><small>'+fmt(x.p)+'</small></span><span class="tag">ดู 3D</span>';
+    const cm=Math.round((REAL_WORLD_SIZES[x.n]||0.25)*100);
+    i.innerHTML=(ph(x)?'<img class="th" src="'+ph(x)+'">':'<span class="e">'+x.e+'</span>')+'<span class="t"><b>'+x.n+'</b><small>'+x.d+'</small><small>'+fmt(x.p)+' • ขนาด ~'+cm+' ซม.</small></span><span class="tag">ดู 3D/AR</span>';
     i.onclick=()=>openView(x);
     m.appendChild(i)});go('rest')};
   $('#list').appendChild(b);});if(!RESTS.some(match))$('#list').innerHTML='<p style="text-align:center;color:var(--mut)">ไม่พบร้านที่ค้นหา</p>'}
