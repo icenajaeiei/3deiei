@@ -94,13 +94,13 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
  <div id="stage">
   <model-viewer id="mv"
     src=""
-    ios-src=""
-    scale="0.05 0.05 0.05"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
     auto-rotate
     rotation-per-second="25deg"
+    bounds="tight"
+    interpolation-decay="200"
     shadow-intensity="1"
     shadow-softness="0.8"
     exposure="1.0"
@@ -131,33 +131,6 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 <script>
 (()=>{
 const $=s=>document.querySelector(s);
-
-// ---- Realistic Real-world Metric Proportions in Meters
-const REAL_WORLD_SIZES = {
-  // Burgers & Mains
-  'สแมชเบอร์เกอร์เนื้อชีส': 0.15,        // 15 ซม. (เบอร์เกอร์เดี่ยว)
-  'ดับเบิลเบอร์เกอร์ & เฟรนช์ฟรายส์': 0.22,   // 22 ซม. (ชุดเบอร์เกอร์+เฟรนช์ฟรายส์)
-  'สเต๊กเนื้อย่างจิ้มแจ่ว': 0.28,          // 28 ซม. (จานสเต๊กเนื้อ)
-  'พิซซ่าเตาฟืนพรีเมียม': 0.35,          // 35 ซม. (พิซซ่าถาด 14 นิ้ว)
-  'ริซอตโต้เห็ดทรัฟเฟิล': 0.26,          // 26 ซม. (จานริซอตโต้)
-  // Noodles & Soups
-  'ซุปหัวหอมสไตล์อิตาเลียน': 0.20,        // 20 ซม. (ถ้วยซุป)
-  'ต้มแซ่บกระดูกอ่อนสูตรโบราณ': 0.22,      // 22 ซม. (ชามต้มแซ่บ)
-  'ก๋วยเตี๋ยวต้มยำกุ้งแม่น้ำ': 0.25,       // 25 ซม. (ชามก๋วยเตี๋ยว)
-  'ผัดหมี่โบราณสูตรคุณยาย': 0.26,         // 26 ซม. (จานผัดหมี่)
-  'ราเมนทงคตสึสไปซี่': 0.26,           // 26 ซม. (ชามราเมน)
-  'อุด้งร้อนเซ็ตญี่ปุ่น': 0.28,           // 28 ซม. (ถาดเซ็ตอุด้ง)
-  'ยากิโซบะกระทะร้อน': 0.26,          // 26 ซม. (กระทะร้อน)
-  'ซูชิเรือรวมมิตรพรีเมียม': 0.45,        // 45 ซม. (เรือซูชิรวมมิตร)
-  // Desserts & Bakery
-  'ครัวซองต์เนยสดฝรั่งเศส': 0.18,         // 18 ซม. (ครัวซองต์)
-  'แครมบรูเล่วานิลลาแท้': 0.14,         // 14 ซม. (ถ้วยคาราเมล)
-  'โดนัทรวมรสพรีเมียม': 0.20,           // 20 ซม. (จานโดนัท)
-  'ไอศกรีมช็อกโกแลตซันเดย์': 0.16,       // 16 ซม. (ถ้วยไอศกรีม)
-  'บลูเบอร์รีคัพเค้กครีมชีส': 0.12,       // 12 ซม. (คัพเค้ก)
-  'เค้กช็อกโกแลตบราวนี่ฟัดจ์': 0.20,      // 20 ซม. (จานเค้ก)
-  'เค้กเชอร์รีดับเบิลเลเยอร์': 0.22       // 22 ซม. (จานเค้กสองชั้น)
-};
 
 // ---- data: [ชื่อ, ราคา, อีโมจิ, หมวด, คำอธิบาย, สี, โมเดลจริง GLB]
 const RESTS=[
@@ -208,39 +181,19 @@ const eta=r=>Math.round(12+kmOf(r)*6),fee=r=>Math.round(15+kmOf(r)*7),SVC=5;
 let addr={};try{addr=JSON.parse(localStorage.getItem('addr')||'{}')}catch(e){}
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',2400)}
 
-// ---- Proportional Food Scales (Burger starts at ~5% / 0.05, all other foods calibrated proportionally)
-const FOOD_SCALES = {
-  'สแมชเบอร์เกอร์เนื้อชีส': 0.05,
-  'ดับเบิลเบอร์เกอร์ & เฟรนช์ฟรายส์': 0.0575,
-  'โดนัทรวมรสพรีเมียม': 0.004056,
-  'ไอศกรีมช็อกโกแลตซันเดย์': 0.03268,
-  'พิซซ่าเตาฟืนพรีเมียม': 0.03342,
-  'ริซอตโต้เห็ดทรัฟเฟิล': 0.1469,
-  'ซุปหัวหอมสไตล์อิตาเลียน': 0.1259,
-  'แครมบรูเล่วานิลลาแท้': 0.04234,
-  'ก๋วยเตี๋ยวต้มยำกุ้งแม่น้ำ': 0.06191,
-  'ผัดหมี่โบราณสูตรคุณยาย': 0.1404,
-  'สเต๊กเนื้อย่างจิ้มแจ่ว': 0.1609,
-  'ต้มแซ่บกระดูกอ่อนสูตรโบราณ': 0.1259,
-  'ราเมนทงคตสึสไปซี่': 0.06191,
-  'ซูชิเรือรวมมิตรพรีเมียม': 0.2099,
-  'อุด้งร้อนเซ็ตญี่ปุ่น': 0.06485,
-  'ยากิโซบะกระทะร้อน': 0.1404,
-  'เค้กช็อกโกแลตบราวนี่ฟัดจ์': 0.1189,
-  'เค้กเชอร์รีดับเบิลเลเยอร์': 0.0006799,
-  'บลูเบอร์รีคัพเค้กครีมชีส': 0.04283,
-  'ครัวซองต์เนยสดฝรั่งเศส': 0.105
-};
-
 // ---- Google <model-viewer> Controller (True Floor-Locked AR Quick Look & Scene Viewer)
 const mv=$('#mv');
+mv.addEventListener('load',()=>{
+ if(typeof mv.updateFraming==='function')mv.updateFraming();
+});
 
 async function showModel(){
  if(!it)return;
- const sc=FOOD_SCALES[it.n]||0.05;
- const sStr=`${sc} ${sc} ${sc}`;
- mv.setAttribute('scale',sStr);
- mv.scale=sStr;
+ mv.removeAttribute('scale');
+ mv.removeAttribute('ios-src');
+ mv.cameraOrbit='0deg 75deg 105%';
+ mv.cameraTarget='auto auto auto';
+ mv.fieldOfView='auto';
  mv.src=it.glb||'/models/burger.glb';
 }
 
